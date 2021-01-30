@@ -1,6 +1,7 @@
 #include <iostream>
 #include <iostream>
 #include <sstream>
+#include <fstream>
 #include <process.h>
 #include "RobotApplication.h"
 #include "globalVars.h"
@@ -88,7 +89,7 @@ unsigned int __stdcall KUKA::LBRMed::onlyreceiveThread(void * pThis){
 			getJointsPos(receiveClient);
 			getJointsMeasuredTorques(receiveClient);
 
-			Sleep(50);
+			Sleep(100);
 			KUKA::thread_beginflag_ = true; // thread begain.
 		}
 		net_serverReceiveTurnOff(receiveClient);
@@ -113,6 +114,13 @@ void  KUKA::LBRMed::updateEEFPos(double EEFpos[6]){
 	std::string cmd = "UPDATE_EEFPos_" + std::to_string(EEFpos[0]) + "_" + std::to_string(EEFpos[1]) + "_" + 
 											std::to_string(EEFpos[2]) + "_" + std::to_string(EEFpos[3]) + "_" + 
 											   std::to_string(EEFpos[4]) + "_" + std::to_string(EEFpos[5]) + "_";
+	this->connection_->write(cmd);
+
+	judgeServerCmdOnce();
+}
+void  KUKA::LBRMed::updateEEFOffset(double EEFOffset[3]) {
+	std::string cmd = "UPDATE_EEFOffset_" + std::to_string(EEFOffset[0]) + "_" + std::to_string(EEFOffset[1]) + "_" +
+											   std::to_string(EEFOffset[2]);
 	this->connection_->write(cmd);
 
 	judgeServerCmdOnce();
@@ -155,6 +163,14 @@ void  KUKA::LBRMed::updateJointPosServo(double jointpos[7]){
 	this->connection_->write(cmd);
 }
 
+void  KUKA::LBRMed::updateJRelVel(double jRelVel) {
+	std::string cmd = "UPDATE_jRelVel_" + std::to_string(jRelVel) + "_";
+	this->connection_->write(cmd);
+}
+void  KUKA::LBRMed::updatecVel(double cVel) {
+	std::string cmd = "UPDATE_cVel_" + std::to_string(cVel) + "_";
+	this->connection_->write(cmd);
+}
 void  KUKA::LBRMed::updateJointVelocity(double jvel[7]){
 	std::string cmd = "UPDATE_jVel_" + std::to_string(jvel[0]) + "_" + std::to_string(jvel[1]) + "_" + 
 									      std::to_string(jvel[2]) + "_" + std::to_string(jvel[3]) + "_" + 
@@ -186,6 +202,17 @@ void  KUKA::LBRMed::getEEFPos(SocketClient *receiveClient) {
 	KUKA::EEFPos_[3] = atof(EEFPos[3].c_str());
 	KUKA::EEFPos_[4] = atof(EEFPos[4].c_str());
 	KUKA::EEFPos_[5] = atof(EEFPos[5].c_str());
+
+		std::ofstream fout("EEFPos.txt");
+		
+		fout << atof(EEFPos[0].c_str()) << " ";
+		fout << atof(EEFPos[1].c_str()) << " ";
+		fout << atof(EEFPos[2].c_str()) << " ";
+		fout << atof(EEFPos[3].c_str()) << " ";
+		fout << atof(EEFPos[4].c_str()) << " ";
+		fout << atof(EEFPos[5].c_str()) << " ";
+		fout << std::endl;
+		fout.close(); 	
 }
 void  KUKA::LBRMed::getEEFForce(SocketClient *receiveClient) {
 
@@ -292,95 +319,77 @@ void  KUKA::LBRMed::endHandGuiding(){
 //************************MOTION************************
 void  KUKA::LBRMed::movePTPinJStoOrigin(double relVel){
 
-	std::string cmd = "UPDATE_jRelVel_" + std::to_string(relVel) + "_";
-	this->connection_->write(cmd);
+	updateJRelVel(relVel);
 
 	judgeServerCmdOnce();
 
 	double jointPos[7] = { 0.0 };
 	updateJointPosServo(jointPos);
 
-	this->connection_->write("MOTION_PTPinJS_");
+	this->connection_->write("MOTION_PTPinJS");
 
-	judgeServerCmdTwice();
+	//judgeServerCmdTwice();
 	//	Sleep(1);
 }
 void  KUKA::LBRMed::movePTPinJS(double jointPos[7], double relVel){
 
-	std::string cmd = "UPDATE_jRelVel_" + std::to_string(relVel) + "_";
-	connection_->write(cmd);
-
+	updateJRelVel(relVel);
 	judgeServerCmdOnce();
 
 	updateJointPosServo(jointPos);
-	connection_->write("MOTION_PTPinJS_");
+	connection_->write("MOTION_PTPinJS");
 
-	judgeServerCmdTwice();
+	//judgeServerCmdTwice();
 	//	Sleep(1);
 }
-
 void  KUKA::LBRMed::movePTPinCS(double cartPos[6], double vel){
 
-	std::string cmd = "UPDATE_cVel_" + std::to_string(vel) + "_"; 
-	connection_->write(cmd);
-
+	updateJRelVel(vel);
 	judgeServerCmdOnce();
 
 	updateEEFPos(cartPos);
-	connection_->write("MOTION_PTPinCS_");
+	connection_->write("MOTION_PTPinCS");
 
-	judgeServerCmdOnce();
+	//judgeServerCmdOnce();
 	//	Sleep(1);
 }
 void  KUKA::LBRMed::moveLIN(double Pos[6], double vel){
 
-	std::string cmd = "UPDATE_cVel_" + std::to_string(vel) + "_"; 
-	this->connection_->write(cmd);
+	updatecVel(vel);
 	judgeServerCmdOnce();
 
 	updateEEFPos(Pos);
-	this->connection_->write("MOTION_LIN_");
-	judgeServerCmdTwice();
+	this->connection_->write("MOTION_LIN");
+	//judgeServerCmdTwice();
 	//	Sleep(1);
 }
-void  KUKA::LBRMed::moveLINRelBase(double Pos[3], double vel){
+void  KUKA::LBRMed::moveLINRelBase(double Offset[3], double vel){
 
-	std::string cmd = "UPDATE_cVel_" + std::to_string(vel) + "_"; 
-	this->connection_->write(cmd);
+	updatecVel(vel);
 	judgeServerCmdOnce();
 
-	double temp[6] = { 0.0 };
-	temp[0] = Pos[0];
-	temp[1] = Pos[1];
-	temp[2] = Pos[2];
-	updateEEFPos(temp);
-	this->connection_->write("MOTION_LINRelBase_");
-	judgeServerCmdTwice();
+	updateEEFOffset(Offset);
+	this->connection_->write("MOTION_LINRelBase");
+	//judgeServerCmdTwice();
 	//	Sleep(1);
 }
-void  KUKA::LBRMed::moveLINRelEEF(double Pos[3], double vel){
+void  KUKA::LBRMed::moveLINRelEEF(double Offset[3], double vel){
 
-	std::string cmd = "UPDATE_cVel_" + std::to_string(vel) + "_"; 
-	this->connection_->write(cmd);
+	updatecVel(vel);
 	judgeServerCmdOnce();
 
-	double temp[6] = { 0.0 };
-	temp[0] = Pos[0];
-	temp[1] = Pos[1];
-	temp[2] = Pos[2];
-	updateEEFPos(temp);
-	this->connection_->write("MOTION_LINRelEEF_");
+	updateEEFOffset(Offset);
+	this->connection_->write("MOTION_LINRelEEF");
 	judgeServerCmdTwice();
 	//	Sleep(1);
 }
-void  KUKA::LBRMed::moveCIRC(double auxiliaryPos[6], double endPos[6], double cVel) {
+void  KUKA::LBRMed::moveCIRC(double auxiliaryPos[6], double endPos[6], double jRelVel) {
 
-	std::string cmd = "UPDATE_cVel_" + std::to_string(cVel) + "_";
-	this->connection_->write(cmd);
+	updateJRelVel(jRelVel);
 	judgeServerCmdOnce();
 
 	updateEEFPosCIRC(auxiliaryPos, endPos);
-	this->connection_->write("MOTION_CIRC_");
+	this->connection_->write("MOTION_CIRC");
 	judgeServerCmdTwice();
 }
 

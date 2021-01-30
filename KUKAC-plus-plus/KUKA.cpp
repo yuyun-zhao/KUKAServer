@@ -42,24 +42,24 @@ int main()
 
 
 	////*****************************************PTPLIN*****************************************
-	//int j;
-	//std::cout << "step3: To start LIN, please input 2: ";
-	//std::cin >> j;
-	//while (j != 2) {
-	//	std::cout << "input 2 to start LIN." << std::endl;
-	//	std::cin >> j;
-	//}
+	/*int j;
+	std::cout << "step3: To start LIN, please input 2: ";
+	std::cin >> j;
+	while (j != 2) {
+		std::cout << "input 2 to start LIN." << std::endl;
+		std::cin >> j;
+	}
 
-	//double EEFPos[6] = { 0.0 };
-	//std::cout << "please input the end position of end effector:";
-	//for (int i = 0; i < 6; ++i) 
-	//	std::cin >> EEFPos[i];
+	double EEFPos[6] = { 0.0 };
+	std::cout << "please input the end position of end effector:";
+	for (int i = 0; i < 6; ++i) 
+		std::cin >> EEFPos[i];
 
-	//double vel = 0.0;
-	//std::cout << "please input velocity:";
-	//std::cin >> vel;
+	double vel = 0.0;
+	std::cout << "please input velocity:";
+	std::cin >> vel;
 
-	//MEDBOT.moveLIN(EEFPos, vel);
+	MEDBOT.moveLIN(EEFPos, vel);*/
 
 
 
@@ -86,28 +86,28 @@ int main()
 
 
 	////*****************************************PTPinJStoOrigin*****************************************
-	//int n;
-	//std::cout << "step5: To move PTP in joint space to the origin, please input 4:";
-	//std::cin >> n;
-	//while (n != 4) {
-	//	std::cout << "input 4 to movePTPinJStoOrigin.";
-	//	std::cin >> n;
-	//}
-	//
-	//double jrelVel;
-	//std::cout << "please input the joint relative velocity:";
-	//std::cin >> jrelVel;
+	/*int n;
+	std::cout << "step5: To move PTP in joint space to the origin, please input 4:";
+	std::cin >> n;
+	while (n != 4) {
+		std::cout << "input 4 to movePTPinJStoOrigin.";
+		std::cin >> n;
+	}
+	
+	double jrelVel;
+	std::cout << "please input the joint relative velocity:";
+	std::cin >> jrelVel;
 
-	//MEDBOT.movePTPinJStoOrigin(jrelVel);
+	MEDBOT.movePTPinJStoOrigin(jrelVel);*/
 
 
 
 	////*****************************************PTPinCS*****************************************
 	//int h;
-	//std::cout << "step5: To start PTPinJS, please input 5:";
+	//std::cout << "step5: To start PTPinCS, please input 5:";
 	//std::cin >> h;
 	//while (h != 5) {
-	//	std::cout << "input 5 to start PTPinJS.";
+	//	std::cout << "input 5 to start PTPinCS.";
 	//	std::cin >> h;
 	//}
 	//
@@ -116,30 +116,36 @@ int main()
 	//for (int i = 0; i < 6; ++i)
 	//	std::cin >> cartPos[i];
 
-	//double cVel = 0.0;
-	//std::cout << "please input velocity:";
-	//std::cin >> cVel;
+	//double jRelVel = 0.0;
+	//std::cout << "please input joint relative velocity:";
+	//std::cin >> jRelVel;
 	//
-	//MEDBOT.movePTPinCS(cartPos, cVel);
+	//MEDBOT.movePTPinCS(cartPos, jRelVel);
 	
 
 
 	////*****************************************LINRelBase(EEF)*****************************************
-	//double pos1[3] = { xxx,xxx,xxx };
-	//double vel1 = xxx;
-	//MEDBOT.moveLINRelBase(pos1, vel1);
+	//Sleep(1000);
 
-	//double pos2[3] = { xxx,xxx,xxx };
-	//double vel2 = xxx;
-	//MEDBOT.moveLINRelEEF(pos2, vel2);
+	//double Offset1[3] = { 50, 50, 50 };
+	//double cVel1 = 10;
+	//MEDBOT.moveLINRelBase(Offset1, cVel1);
+
+	//Sleep(5000);
+
+	//double Offset2[3] = { 50, 50, 50 };
+	//double cVel2 = 10;
+	//MEDBOT.moveLINRelEEF(Offset2, cVel2);
 
 
 
-	////*****************************************CIRC*****************************************
-	//double auxiliaryPos[6] = {};
-	//double endPos[6] = {};
-	//double cVel = 1;
-	//MEDBOT.moveCIRC(auxiliaryPos, endPos, cVel);
+	//////*****************************************CIRC*****************************************
+	//Sleep(1000);
+
+	//double auxiliaryPos[6] = {600, 50, 550, 3.14, 0, 3.14};
+	//double endPos[6] = {600, 100, 500, 3.14, 0, 3.14};
+	//double jRelVelcirc = 0.1;
+	//MEDBOT.moveCIRC(auxiliaryPos, endPos, jRelVelcirc);
 
 
 
@@ -147,4 +153,5 @@ int main()
 	MEDBOT.net_serverTurnOff();
 
 	system("pause");
+
 }

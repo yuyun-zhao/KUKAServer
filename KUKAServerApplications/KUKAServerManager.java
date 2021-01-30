@@ -17,6 +17,8 @@ package KUKAServerApplications;
  * 
  * */
 
+import javax.inject.Inject;
+
 import com.kuka.connectivity.motionModel.directServo.DirectServo;
 import com.kuka.connectivity.motionModel.directServo.IDirectServoRuntime;
 //import com.kuka.generated.ioAccess.MediaFlangeIOGroup;
@@ -25,7 +27,10 @@ import com.kuka.roboticsAPI.applicationModel.RoboticsAPIApplication;
 import com.kuka.roboticsAPI.controllerModel.Controller;
 import com.kuka.roboticsAPI.deviceModel.JointPosition;
 import com.kuka.roboticsAPI.geometricModel.Frame;
+import com.kuka.roboticsAPI.geometricModel.LoadData;
+import com.kuka.roboticsAPI.geometricModel.ObjectFrame;
 import com.kuka.roboticsAPI.geometricModel.Tool;
+import com.kuka.roboticsAPI.geometricModel.math.XyzAbcTransformation;
 
 public class KUKAServerManager extends RoboticsAPIApplication
 {
@@ -37,6 +42,12 @@ public class KUKAServerManager extends RoboticsAPIApplication
 
 	// Tool Data
 	public static Tool tool_;
+    private LoadData _loadData;
+
+    private static final String TOOL_FRAME = "toolFrame";
+    private static final double[] TRANSLATION_OF_TOOL = { 0, 0, 0 };
+    private static final double MASS = 0;
+    private static final double[] CENTER_OF_MASS_IN_MILLIMETER = { 0, 0, 0 };
 
 	// Utility classes
 	public static MediaFlangeFunctions mff_; // utility functions to read Write
@@ -77,6 +88,25 @@ public class KUKAServerManager extends RoboticsAPIApplication
 		// TODO 使用@Inject后，不需要再实例化对象
 		LBR_Med_ = this.getContext().getDeviceFromType(LBRMed.class);
 		kuka_Sunrise_Cabinet_ = getController("KUKA_Sunrise_Cabinet_1");
+		
+        _loadData = new LoadData();
+        _loadData.setMass(MASS);
+        _loadData.setCenterOfMass(
+                CENTER_OF_MASS_IN_MILLIMETER[0], CENTER_OF_MASS_IN_MILLIMETER[1],
+                CENTER_OF_MASS_IN_MILLIMETER[2]);
+        
+        tool_ = new Tool("Tool",_loadData);
+        
+        XyzAbcTransformation trans = XyzAbcTransformation.ofTranslation(
+                TRANSLATION_OF_TOOL[0], TRANSLATION_OF_TOOL[1],
+                TRANSLATION_OF_TOOL[2]);
+        
+        ObjectFrame aTransformation = tool_.addChildFrame(TOOL_FRAME
+                + "(TCP)", trans);
+        
+        tool_.setDefaultMotionFrame(aTransformation);
+        // Attach tool to the robot
+        tool_.attachTo(LBR_Med_.getFlange());
 
 		jNum_ = LBR_Med_.getJointCount();
 
@@ -98,10 +128,6 @@ public class KUKAServerManager extends RoboticsAPIApplication
 
 		terminate_flag_ = false;
 
-		// 设置工具坐标系为法兰坐标系
-		double[] defaultToolInfo = { 0., 0., 0., 0., 0., 0. ,0., 0., 0., 0.};
-		dabak_.attachToolToFlange("defaultToolEqualFlange", defaultToolInfo);
-
 		// 开启“查询状态服务器”子线程
 		int _sendStatePort = 30003;
 		int _timeout = 300 * 1000; 
@@ -112,7 +138,11 @@ public class KUKAServerManager extends RoboticsAPIApplication
 		int _backgroundPort = 30001;
 		dabak_ = new BackgroundTask(_backgroundPort, _timeout, LBR_Med_, this.getLogger());
 		dabak_.start();
-
+		
+		// 设置工具坐标系为法兰坐标系
+		double[] defaultToolInfo = { 0., 0., 0., 0., 0., 0. ,0., 0., 0., 0.};
+		dabak_.attachToolToFlange("defaultToolEqualFlange", defaultToolInfo);
+		
 		// Call instructors of utility classes
 		mff_ = new MediaFlangeFunctions(kuka_Sunrise_Cabinet_, LBR_Med_, dabak_);
 		queryRobotStateVariables_ = new StateQueryMachine(LBR_Med_);

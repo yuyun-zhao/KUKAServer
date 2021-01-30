@@ -90,15 +90,15 @@ public class ThreePointTestLIN extends RoboticsAPIApplication
 		cFrame.setGammaRad(Math.PI);
 		
 		_lbr.move(lin(cFrame).setJointVelocityRel(0.1));
-//      //心形线		
-//		Frame bFrame = _lbr.getCurrentCartesianPosition(_toolAttachedToLBR.getDefaultMotionFrame());		
-//		bFrame.setX(610);bFrame.setY(0);bFrame.setZ(400);bFrame.setAlphaRad(Math.PI);
-//		bFrame.setBetaRad(0);bFrame.setGammaRad(Math.PI);	
-//		Frame aFrame = _lbr.getCurrentCartesianPosition(_toolAttachedToLBR.getDefaultMotionFrame());
-//		aFrame.setX(610);aFrame.setY(0);aFrame.setZ(600);aFrame.setAlphaRad(Math.PI);
-//		aFrame.setBetaRad(0);aFrame.setGammaRad(Math.PI);
-//		_lbr.move(circ(bFrame,aFrame).setJointVelocityRel(0.1));
-//		
+      
+		Frame bFrame = _lbr.getCurrentCartesianPosition(_toolAttachedToLBR.getDefaultMotionFrame());		
+		bFrame.setX(610);bFrame.setY(0);bFrame.setZ(400);bFrame.setAlphaRad(Math.PI);
+		bFrame.setBetaRad(0);bFrame.setGammaRad(Math.PI);	
+		Frame aFrame = _lbr.getCurrentCartesianPosition(_toolAttachedToLBR.getDefaultMotionFrame());
+		aFrame.setX(610);aFrame.setY(0);aFrame.setZ(600);aFrame.setAlphaRad(Math.PI);
+		aFrame.setBetaRad(0);aFrame.setGammaRad(Math.PI);
+		_lbr.move(circ(bFrame,aFrame).setJointVelocityRel(0.1));
+//		//心形线		
 //		ThreadUtil.milliSleep(3000);	
 //		bFrame.setX(610);bFrame.setY(-100);bFrame.setZ(700);bFrame.setAlphaRad(Math.PI);
 //		bFrame.setBetaRad(0);bFrame.setGammaRad(Math.PI);	

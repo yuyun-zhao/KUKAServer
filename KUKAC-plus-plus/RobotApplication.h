@@ -24,12 +24,15 @@ namespace KUKA{
 
 		//************************UPDATE************************
 		void updateEEFPos(double EEFpos[6]);
+		void updateEEFOffset(double EEFOffset[3]);
 		void updateEEFPosServo(double EEFpos[6]);
 		void updateEEFPosCIRC(double auxiliaryPos[6],double endPos[6]);
 		
 		void updateJointPos(double jointpos[7]);
 		void updateJointPosServo(double jointpos[7]);
 
+		void updateJRelVel(double jRelVel);
+		void updatecVel(double cVel);
 		void updateJointVelocity(double jvel[7]);
 		void updateJointVelocityServo(double jvel[7]);
 

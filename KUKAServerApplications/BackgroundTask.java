@@ -434,7 +434,7 @@ class BackgroundTask implements Runnable
 	private void ResponseQUERYCommand()
 	{
 		// 响应QUERY命令：查询关节位置值
-		if (CommandParseMachine.isEqual(command_, "QUERY_JointPos"))
+		if (CommandParseMachine.isEqual(command_, "QUERY_JointPosition"))
 		{
 			this.sendCommand(KUKAServerManager.queryRobotStateVariables_.
 					queryJointPosition());
@@ -467,7 +467,7 @@ class BackgroundTask implements Runnable
 	}
 
 	// respond to a data Acquisition Request
-	private void dataAcquisitionRequest()
+	/*private void dataAcquisitionRequest()
 	{
 		// Write output of Media flange
 		if (CommandParseMachine.isPrefix(command_, "blueOn"))
@@ -544,7 +544,7 @@ class BackgroundTask implements Runnable
 				command_.setLength(0);
 			}
 		}
-	}
+	}*/
 
 	// TODO 判断是否需要放在子线程
 	public void directServoStartJoints(){

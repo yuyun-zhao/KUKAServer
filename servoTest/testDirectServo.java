@@ -2,6 +2,7 @@ package servoTest;
 
 import static com.kuka.roboticsAPI.motionModel.BasicMotions.ptp;
 import com.kuka.common.ThreadUtil;
+
 import com.kuka.connectivity.motionModel.directServo.DirectServo;
 import com.kuka.connectivity.motionModel.directServo.IDirectServoRuntime;
 import com.kuka.connectivity.motionModel.smartServo.ServoMotion;
