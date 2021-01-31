@@ -5,6 +5,7 @@ package KUKAServerApplications;
 //import com.kuka.generated.ioAccess.MediaFlangeIOGroup;
 import com.kuka.roboticsAPI.controllerModel.Controller;
 import com.kuka.roboticsAPI.deviceModel.LBR;
+import com.kuka.roboticsAPI.ioModel.IOTypes;
 
 public class MediaFlangeFunctions {
 

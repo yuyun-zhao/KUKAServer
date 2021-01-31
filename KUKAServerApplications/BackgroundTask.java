@@ -7,12 +7,7 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import com.kuka.connectivity.motionModel.directServo.DirectServo;
-import com.kuka.connectivity.motionModel.directServo.IDirectServoRuntime;
 import com.kuka.med.deviceModel.LBRMed;
-import com.kuka.roboticsAPI.deviceModel.JointPosition;
-
 import com.kuka.roboticsAPI.geometricModel.LoadData;
 import com.kuka.roboticsAPI.geometricModel.ObjectFrame;
 import com.kuka.roboticsAPI.geometricModel.Tool;
@@ -38,9 +33,6 @@ class BackgroundTask implements Runnable
 	// 将"done\n"指令发送给上位机，表明下位机已收到指令，ack：acknowledgement
 	private static final String ack = "done" + stopCharacter;
 	private static final String error = "error" + stopCharacter;
-	
-	// 原子Boolean，线程安全地设置_handGuiding_endFlag的布尔值
-	public static AtomicBoolean handguiding_endflag_ = new AtomicBoolean(false);
 
 	BackgroundTask(int port, int timeout, LBRMed lbr_Med, ITaskLogger logger)
 	{
@@ -111,24 +103,29 @@ class BackgroundTask implements Runnable
 
 					if (CommandParseMachine.isEqual(command_, "END"))
 					{
-						KUKAServerManager.directSmart_ServoMotionFlag_ = false;
+						KUKAServerManager.directServoMotionFlag_ = false;
 						KUKAServerManager.terminate_flag_ = true;
 						command_.setLength(0);
 						break;
 					}
 					// 开启servo模式
-					else if (CommandParseMachine.isPrefix(command_, "startDirectServoJoints")) {
-						KUKAServerManager.directSmart_ServoMotionFlag_ = true;
+					else if (CommandParseMachine.isEqual(command_, "startServoMode")) {
+						try{						
+						logger_.info("start direct servo mode");
+						DirectServoMode ds = new DirectServoMode(LBR_Med_,KUKAServerManager.tool_,logger_);
+						ds.start();
 						this.sendCommand(ack);
 						command_.setLength(0);
-						logger_.info("realtime control initiated");
-						directServoStartJoints();
-						logger_.info("realtime control terminated");
+						}catch(Exception e){
+							this.sendCommand(error);
+							logger_.info(e.getMessage());
+						}
 					}
 					// 关闭servo模式
-					else if (CommandParseMachine.isEqual(command_, "stopDirectServoJoints"))
+					else if (CommandParseMachine.isEqual(command_, "endServoMode"))
 					{
-						KUKAServerManager.directSmart_ServoMotionFlag_ = false;
+						KUKAServerManager.directServoMotionFlag_ = false;
+						logger_.info("direct servo mode terminated");
 						this.sendCommand(ack);
 						command_.setLength(0);
 					}
@@ -137,19 +134,21 @@ class BackgroundTask implements Runnable
 					{
 						// 运行HandGuiding程序
 						try{
-							HandGuidingMode hg = new HandGuidingMode(LBR_Med_);
+							HandGuidingMode hg = new HandGuidingMode(LBR_Med_,logger_);
 							hg.start();
 							this.sendCommand(ack);
 						} catch(Exception e){
 							this.sendCommand(error);
 							logger_.info(e.getMessage());
-						}
+						}		
 						command_.setLength(0);
 					}
 					// 停止HandGuiding
 					else if (CommandParseMachine.isEqual(command_, "endHandGuiding"))
 					{
-						handguiding_endflag_.compareAndSet(false, true);
+						
+						KUKAServerManager.handguiding_endflag_.compareAndSet(false, true);
+						logger_.info(String.valueOf(KUKAServerManager.handguiding_endflag_.get()));
 						this.sendCommand(ack);
 						command_.setLength(0);
 					}
@@ -266,6 +265,8 @@ class BackgroundTask implements Runnable
 			 
 			logger_.info("MOTION_LINRelBase receive");
 			try {
+//				logger_.info(Double.toString(KUKAServerManager.cVel_));
+//				logger_.info(Double.toString(KUKAServerManager.EEFOffset_[1]));
 				MotionExecuteMachine.LINMotionRelBase();
 				this.sendCommand(ack);
 				logger_.info("MOTION_LINRelBase done");
@@ -399,36 +400,45 @@ class BackgroundTask implements Runnable
 		}
 
 		// Servo模式
-		// 响应UPDATE命令：设置关节坐标值（servo模式）
-		else if (CommandParseMachine.isPrefix(command_, "UPDATE_jPosServo_"))
-		{
-			if(!CommandParseMachine.updateJointPos(command_.toString()))
-			{
-				// 若发送的指令格式错误，即不符合规定格式，则停止servo运动
-				KUKAServerManager.directSmart_ServoMotionFlag_ = false;
-			}
-			// 快速模式不返回应答ack
-			command_.setLength(0);
-		}
+//		// 响应UPDATE命令：设置关节坐标值（servo模式）
+//		else if (CommandParseMachine.isPrefix(command_, "UPDATE_jPosServo_"))
+//		{
+//			if(!CommandParseMachine.updateJointPos(command_.toString()))
+//			{
+//				// 若发送的指令格式错误，即不符合规定格式，则停止servo运动
+//				KUKAServerManager.directServoMotionFlag_ = false;
+//			}
+//			// 快速模式不返回应答ack
+//			command_.setLength(0);
+//		}
+		
 		// 响应UPDATE命令：更新EEF坐标值（servo模式）
 		else if (CommandParseMachine.isPrefix(command_, "UPDATE_EEFPosServo_"))
 		{
 			if (!CommandParseMachine.updateEEFPosServo(command_.toString())){
-				KUKAServerManager.directSmart_ServoMotionFlag_ = false;
+				KUKAServerManager.directServoMotionFlag_ = false;
 			}
 			// 快速模式不返回应答ack
 			command_.setLength(0);
 		}
 		
-		// 响应UPDATE命令：更新各个关节的速度，7维向量（servo模式）
-		else if (CommandParseMachine.isPrefix(command_, "UPDATE_jVelServo_")){
-		
-			if (!CommandParseMachine.updateJointVel(command_.toString())){
-				KUKAServerManager.directSmart_ServoMotionFlag_ = false;
-			} 
-			// 快速模式不返回应答ack
+		//响应UPDATE命令：更新关节相对速度（servo模式）
+		else if (CommandParseMachine.isPrefix(command_, "UPDATE_jRelVelServo_")){
+			if(!CommandParseMachine.updatejRelVelServo(command_.toString())){
+				KUKAServerManager.directServoMotionFlag_ = false;
+			}
 			command_.setLength(0);
 		}
+		
+//		// 响应UPDATE命令：更新各个关节的速度，7维向量（servo模式）
+//		else if (CommandParseMachine.isPrefix(command_, "UPDATE_jVelServo_")){
+//		
+//			if (!CommandParseMachine.updateJointVel(command_.toString())){
+//				KUKAServerManager.directServoMotionFlag_ = false;
+//			} 
+//			// 快速模式不返回应答ack
+//			command_.setLength(0);
+//		}
 	}
 
 	private void ResponseQUERYCommand()
@@ -464,173 +474,6 @@ class BackgroundTask implements Runnable
 
 		// Attach tool to the robot
 		KUKAServerManager.tool_.attachTo(KUKAServerManager.LBR_Med_.getFlange());
-	}
-
-	// respond to a data Acquisition Request
-	/*private void dataAcquisitionRequest()
-	{
-		// Write output of Media flange
-		if (CommandParseMachine.isPrefix(command_, "blueOn"))
-		{
-			KUKAServerManager.mff_.blueOn();
-			this.sendCommand(ack);
-			command_.setLength(0);
-		} else if (CommandParseMachine.isPrefix(command_, "blueOff"))
-		{
-			KUKAServerManager.mff_.blueOff();
-			this.sendCommand(ack);
-			command_.setLength(0);
-		} else if (CommandParseMachine.isPrefix(command_, "pin"))
-		{
-			if (CommandParseMachine.isPrefix(command_, "pin1on"))
-			{
-				KUKAServerManager.mff_.pin1On();
-				this.sendCommand(ack);
-				command_.setLength(0);
-			} else if (CommandParseMachine.isPrefix(command_, "pin1off"))
-			{
-				KUKAServerManager.mff_.pin1Off();
-				this.sendCommand(ack);
-				command_.setLength(0);
-			} else if (CommandParseMachine.isPrefix(command_, "pin11on"))
-			{
-				KUKAServerManager.mff_.pin11On();
-				this.sendCommand(ack);
-				command_.setLength(0);
-			} else if (CommandParseMachine.isPrefix(command_, "pin11off"))
-			{
-				KUKAServerManager.mff_.pin11Off();
-				this.sendCommand(ack);
-				command_.setLength(0);
-			} else if (CommandParseMachine.isPrefix(command_, "pin2on"))
-			{
-				KUKAServerManager.mff_.pin2On();
-				this.sendCommand(ack);
-				command_.setLength(0);
-			} else if (CommandParseMachine.isPrefix(command_, "pin2off"))
-			{
-				KUKAServerManager.mff_.pin2Off();
-				this.sendCommand(ack);
-				command_.setLength(0);
-			} else if (CommandParseMachine.isPrefix(command_, "pin12on"))
-			{
-				KUKAServerManager.mff_.pin12On();
-				this.sendCommand(ack);
-				command_.setLength(0);
-			} else if (CommandParseMachine.isPrefix(command_, "pin12off"))
-			{
-				KUKAServerManager.mff_.pin12Off();
-				this.sendCommand(ack);
-				command_.setLength(0);
-			}
-		}
-		// Read input of Media flange
-		else if (CommandParseMachine.isPrefix(command_, "getPin"))
-		{
-			if (CommandParseMachine.isPrefix(command_, "getPin10")) {
-				KUKAServerManager.mff_.getPin10();
-				command_.setLength(0);
-			} else if (CommandParseMachine.isPrefix(command_, "getPin16")) {
-				KUKAServerManager.mff_.getPin16();
-				command_.setLength(0);
-			} else if (CommandParseMachine.isPrefix(command_, "getPin13")) {
-				KUKAServerManager.mff_.getPin13();
-				command_.setLength(0);
-			} else if (CommandParseMachine.isPrefix(command_, "getPin3")) {
-				KUKAServerManager.mff_.getPin3();
-				command_.setLength(0);
-			} else if (CommandParseMachine.isPrefix(command_, "getPin4")) {
-				KUKAServerManager.mff_.getPin4();
-				command_.setLength(0);
-			}
-		}
-	}*/
-
-	// TODO 判断是否需要放在子线程
-	public void directServoStartJoints(){
-	
-		boolean doDebugPrints = false;
-		JointPosition initialPosition = new JointPosition(LBR_Med_.getCurrentJointPosition());
-
-		for (int i = 0; i < 7; i++)
-			KUKAServerManager.jPos_[i] = initialPosition.get(i);
-		
-		DirectServo aDirectServoMotion = new DirectServo(initialPosition);
-		aDirectServoMotion.setMinimumTrajectoryExecutionTime(40e-3);
-
-		logger_.info("Starting DirectServo motion in position control mode");
-		LBR_Med_.moveAsync(aDirectServoMotion);
-		logger_.info("Get the runtime of the DirectServo motion");
-
-		IDirectServoRuntime theDirectServoRuntime = aDirectServoMotion.getRuntime();
-
-		JointPosition destination = new JointPosition(LBR_Med_.getJointCount());
-		double disp;
-		double temp;
-		double absDisp;
-
-		try {
-			// do a cyclic loop
-			// Do some timing...
-			// in nanosec
-
-			while (KUKAServerManager.directSmart_ServoMotionFlag_ == true)
-			{
-				// ///////////////////////////////////////////////////////
-				// Insert your code here
-				// e.g Visual Servoing or the like
-				// Synchronize with the realtime system
-				// theDirectServoRuntime.updateWithRealtimeSystem();
-
-				if (doDebugPrints){
-					logger_.info("Current fifth joint position " + KUKAServerManager.jPos_[5]);
-					logger_.info("Current joint destination " +
-							theDirectServoRuntime.getCurrentJointDestination());
-				}
-
-				Thread.sleep(1);
-				// getLogger().warn(Double.toString(jpos_[0]));
-				// getLogger().info(daCommand);
-				
-				JointPosition currentPos = new JointPosition(
-						LBR_Med_.getCurrentJointPosition());
-
-				for (int k = 0; k < destination.getAxisCount(); ++k) {
-
-					double dj = KUKAServerManager.jPos_[k] - currentPos.get(k);
-					disp = this.getTheDisplacement(dj);
-					temp = currentPos.get(k) + disp;
-					absDisp = Math.abs(disp);
-					if (absDisp > KUKAServerManager.jDispMax_[k]) {
-						KUKAServerManager.jDispMax_[k] = absDisp;
-					}
-					destination.set(k, temp);
-					KUKAServerManager.updateCycleJointPos_[k] = temp;
-
-				}
-				theDirectServoRuntime.setDestination(destination);
-			}
-		} catch (Exception e) {
-			logger_.info(e.getLocalizedMessage());
-			e.printStackTrace();
-			// Print statistics and parameters of the motion
-			logger_.info("Simple Cartesian Test \n"
-							+ theDirectServoRuntime.toString());
-
-			logger_.info("Stop the DirectServo motion");
-
-		}
-
-		theDirectServoRuntime.stopMotion();
-		logger_.info("Stop the DirectServo motion for the stop instruction was sent");
-	}
-
-	//求位移
-	double getTheDisplacement(double dj) {
-		double a = 0.07;
-		double b = a * 0.75;
-		double exponenet = -Math.pow(dj / b, 2);
-		return Math.signum(dj) * a * (1 - Math.exp(exponenet));
 	}
 	
 }

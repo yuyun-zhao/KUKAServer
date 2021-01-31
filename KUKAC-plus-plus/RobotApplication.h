@@ -17,8 +17,7 @@ namespace KUKA{
 
 
 		//************************ judge whether the server has received the cmd************************
-		void judgeServerCmdOnce();  // judge whether the server has received the cmd
-		void judgeServerCmdTwice(); // judge whether the server has  completed  running the cmd
+		void judgeServerCmd();  
 
 
 
@@ -30,9 +29,10 @@ namespace KUKA{
 		
 		void updateJointPos(double jointpos[7]);
 		void updateJointPosServo(double jointpos[7]);
-
-		void updateJRelVel(double jRelVel);
+		
 		void updatecVel(double cVel);
+		void updateJRelVel(double jRelVel);	
+		void updateJRelVelServo(double jRelVelServo);
 		void updateJointVelocity(double jvel[7]);
 		void updateJointVelocityServo(double jvel[7]);
 
@@ -72,6 +72,12 @@ namespace KUKA{
 
 
 
+		//************************Servo************************
+		void startServoMode();
+		void endServoMode();
+
+
+
 		//************************MOTION************************
 		void movePTPinJStoOrigin(double vel);
 		void movePTPinJS(double jointpos[7], double relVel);
@@ -79,7 +85,7 @@ namespace KUKA{
 		void moveLIN(double Pos[6], double vel);
 		void moveLINRelBase(double pos[3], double relVel);
 		void moveLINRelEEF(double pos[3], double relVel);
-		void movePTPTransportPositionJointSpace(double vel);
+		void moveLINServo(double endpos[6],double jRelVel);
 		void moveCIRC(double auxiliaryPos[6], double endPos[6], double cVel);
 
 

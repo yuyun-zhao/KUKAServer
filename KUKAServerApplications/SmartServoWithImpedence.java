@@ -46,7 +46,7 @@ public class SmartServoWithImpedence {
 		StringTokenizer st = new StringTokenizer(thestring, "_");
 		if (st.hasMoreTokens()) {
 			// First token is the instruction preciseHandGUiding
-			String temp = st.nextToken();
+			st.nextToken();
 			// Following tokens are data of COM of tool+toolchanger
 			val = new double[7];
 			int j = 0;
@@ -128,7 +128,7 @@ public class SmartServoWithImpedence {
 
 	protected static void runSmartServoMotion(
 			final IMotionControlMode controlMode) throws Exception {
-		final boolean doDebugPrints = false;
+//		final boolean doDebugPrints = false;
 
 		final JointPosition initialPosition = new JointPosition(
 				_lbr.getCurrentJointPosition());
@@ -159,16 +159,12 @@ public class SmartServoWithImpedence {
 		boolean errorFlag = false;
 		try {
 
-			while (KUKAServerManager.directSmart_ServoMotionFlag_ == true) {
+			while (KUKAServerManager.directServoMotionFlag_ == true) {
 
 				ThreadUtil
 						.milliSleep(MILLI_SLEEP_TO_EMULATE_COMPUTATIONAL_EFFORT);
 
 				theSmartServoRuntime.updateWithRealtimeSystem();
-
-				// Get the measured position in cartesian...
-				final JointPosition curMsrJntPose = theSmartServoRuntime
-						.getAxisQMsrOnController();
 
 				JointPosition currentPos = new JointPosition(
 						_lbr.getCurrentJointPosition());

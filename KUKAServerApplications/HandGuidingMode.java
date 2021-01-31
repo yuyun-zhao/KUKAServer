@@ -6,32 +6,35 @@ import com.kuka.connectivity.motionModel.smartServo.SmartServo;
 import com.kuka.med.deviceModel.LBRMed;
 import com.kuka.roboticsAPI.deviceModel.JointPosition;
 import com.kuka.roboticsAPI.motionModel.controlModeModel.JointImpedanceControlMode;
+import com.kuka.task.ITaskLogger;
 
 import static com.kuka.roboticsAPI.motionModel.BasicMotions.ptp;
 
 public class HandGuidingMode
 {
     private LBRMed LBR_Med_;
+    private ITaskLogger logger_;
 
-    public HandGuidingMode(LBRMed LBR_Med)
+    public HandGuidingMode(LBRMed LBR_Med,ITaskLogger logger)
     {
         LBR_Med_ = LBR_Med;
+        logger_ = logger;
     }
 
     public void start()
-    {
-        BackgroundTask.handguiding_endflag_.compareAndSet(true, false);
+    { 
+        KUKAServerManager.handguiding_endflag_.compareAndSet(true, false);
         LBR_Med_.move(ptp(LBR_Med_.getCurrentJointPosition()));
         if (!ServoMotion.validateForImpedanceMode(LBR_Med_))
         {
             //getLogger().info("Validation of Torque Model failed");
-        }
+        } 
         JointImpedanceControlMode controlMode_1 = new JointImpedanceControlMode(
                 2000.0, 2000.0, 2000.0, 2000.0, 100.0, 100.0, 100.0);
         controlMode_1.setStiffness(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0); // 僵硬度
         controlMode_1.setDampingForAllJoints(0.1); // 阻尼
         controlMode_1.setMaxJointSpeed(1000, 1000, 1000, 1000, 1000, 1000, 1000);
-
+       
         JointImpedanceControlMode controlMode_2 = new JointImpedanceControlMode(
                 2000.0, 2000.0, 2000.0, 2000.0, 100.0, 100.0, 100.0);
         controlMode_1.setStiffness(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
@@ -45,9 +48,10 @@ public class HandGuidingMode
         LBR_Med_.moveAsync(servoMotion.setMode(controlMode_1));
         ISmartServoRuntime servoMotionRuntime = servoMotion.getRuntime();
         servoMotionRuntime.updateWithRealtimeSystem();
-
-        while (BackgroundTask.handguiding_endflag_.get() == false)
+       
+        while (KUKAServerManager.handguiding_endflag_.get() == false)      		
         {
+//        	logger_.info(String.valueOf(KUKAServerManager.handguiding_endflag_.get()));
             JointPosition curJntPose = LBR_Med_.getCurrentJointPosition();
 
             Boolean a1 = -2.8 < curJntPose.get(0) && curJntPose.get(0) < 2.8;
@@ -68,9 +72,10 @@ public class HandGuidingMode
             {
                 servoMotionRuntime.changeControlModeSettings(controlMode_2);
             }
-        }
-
+         }
+        logger_.info("3");
         servoMotionRuntime.stopMotion();
+        logger_.info("stop");
         JointPosition ptpPose = LBR_Med_.getCurrentJointPosition();
         LBR_Med_.move(ptp(ptpPose).setJointVelocityRel(0.4));
 

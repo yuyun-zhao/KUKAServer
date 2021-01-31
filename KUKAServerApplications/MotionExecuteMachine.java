@@ -422,7 +422,7 @@ public class MotionExecuteMachine
 		destination.setX(KUKAServerManager.EEFOffset_[0] + destination.getX());
 		destination.setY(KUKAServerManager.EEFOffset_[1] + destination.getY());
 		destination.setZ(KUKAServerManager.EEFOffset_[2] + destination.getZ());
-
+		
 		// 移动的方向是由Base坐标系决定的
 		KUKAServerManager.tool_.move(lin(destination).
 				setCartVelocity(KUKAServerManager.cVel_));
@@ -463,21 +463,6 @@ public class MotionExecuteMachine
 		end.setBetaRad(KUKAServerManager.EEFPosCIRC2_[4]);
 		end.setGammaRad(KUKAServerManager.EEFPosCIRC2_[5]);
 		
-//		Frame cFrame = KUKAServerManager.LBR_Med_.getCurrentCartesianPosition(
-//				KUKAServerManager.tool_.getDefaultMotionFrame());	
-//		cFrame.setX(610);cFrame.setY(200);cFrame.setZ(400);
-//		cFrame.setAlphaRad(Math.PI);cFrame.setBetaRad(0);cFrame.setGammaRad(Math.PI);		
-//		KUKAServerManager.LBR_Med_.move(lin(cFrame).setJointVelocityRel(0.1));
-//		Frame bFrame = KUKAServerManager.LBR_Med_.getCurrentCartesianPosition(
-//				KUKAServerManager.tool_.getDefaultMotionFrame());		
-//		bFrame.setX(610);bFrame.setY(0);bFrame.setZ(400);bFrame.setAlphaRad(Math.PI);
-//		bFrame.setBetaRad(0);bFrame.setGammaRad(Math.PI);	
-//		Frame aFrame = KUKAServerManager.LBR_Med_.getCurrentCartesianPosition(
-//				KUKAServerManager.tool_.getDefaultMotionFrame());	
-//		aFrame.setX(610);aFrame.setY(0);aFrame.setZ(600);aFrame.setAlphaRad(Math.PI);
-//		aFrame.setBetaRad(0);aFrame.setGammaRad(Math.PI);
-//		KUKAServerManager.LBR_Med_.move(circ(bFrame,aFrame).setJointVelocityRel(0.1));
-
 		// TODO 这里速度应该是绝对值速度才对
 		KUKAServerManager.tool_.move(circ(auxiliary, end).
 				setJointVelocityRel(KUKAServerManager.jRelVel_));

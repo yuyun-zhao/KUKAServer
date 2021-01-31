@@ -90,6 +90,25 @@ public class CommandParseMachine
 			return false;
 		}
 	}
+	
+	//更新关节相对速度（Servo模式）
+	public static boolean updatejRelVelServo(String command)
+	{
+		StringTokenizer st = new StringTokenizer(command, "_");
+		st.nextToken();
+		st.nextToken();
+		
+		if(st.countTokens() == 1){
+			try{
+				KUKAServerManager.jRelVelServo_ = Double.parseDouble(st.nextToken());
+			}catch (Exception e){
+				return false;
+			}
+			return true;
+		}else {
+			return false;
+		}
+	}
 
 	// 更新EEF绝对运动速度
 	public static boolean updateCartVelocity(String command)
@@ -194,7 +213,7 @@ public class CommandParseMachine
 			return false;
 		}
 	}
-
+	
 	// 应用于圆弧运动模式，更新EEF位置
 	// bOne为true时，设置为Circ1；为false时，设置为Circ2
 	public static boolean updateEEFPosOnCircMode(String command, boolean bOne)
