@@ -127,10 +127,11 @@ void  KUKA::LBRMed::updateEEFOffset(double EEFOffset[3]) {
 }
 void  KUKA::LBRMed::updateEEFPosServo(double EEFpos[6]){
 
-	std::string cmd = "UPDATE_EEFPosServo_" + std::to_string(EEFpos[0]) + "_" + std::to_string(EEFpos[1]) + "_" + 
+	std::string cmd = "UPDATE_ServoPos_" + std::to_string(EEFpos[0]) + "_" + std::to_string(EEFpos[1]) + "_" + 
 									             std::to_string(EEFpos[2]) + "_" + std::to_string(EEFpos[3]) + "_" + 
 									                std::to_string(EEFpos[4]) + "_" + std::to_string(EEFpos[5]) + "_";
 	this->connection_->write(cmd);
+
 }
 void  KUKA::LBRMed::updateEEFPosCIRC(double auxiliaryPos[6], double endPos[6]) {
 
@@ -323,11 +324,11 @@ void  KUKA::LBRMed::endHandGuiding(){
 //************************Servo************************
 void  KUKA::LBRMed::startServoMode() {
 	this->connection_->write("startServoMode");
-	judgeServerCmd();
+	//judgeServerCmd();
 }
 void  KUKA::LBRMed::endServoMode() {
 	this->connection_->write("endServoMode");
-	judgeServerCmd();
+	//judgeServerCmd();
 }
 
 
@@ -394,8 +395,9 @@ void  KUKA::LBRMed::moveLINRelEEF(double Offset[3], double vel){
 	judgeServerCmd();
 }
 void  KUKA::LBRMed::moveLINServo(double endPos[6], double jRelVel) {
-	updateJRelVelServo(jRelVel);
 	updateEEFPosServo(endPos);
+
+	updateJRelVelServo(jRelVel);
 }
 void  KUKA::LBRMed::moveCIRC(double auxiliaryPos[6], double endPos[6], double jRelVel) {
 

@@ -8,7 +8,7 @@ import com.kuka.roboticsAPI.geometricModel.Frame;
 import com.kuka.roboticsAPI.geometricModel.Tool;
 import com.kuka.task.ITaskLogger;
 
-public class DirectServoMode
+public class DirectServoMode implements Runnable
 {
 	private LBR _lbr;
     private Tool _toolAttachedToLBR;
@@ -51,21 +51,29 @@ public class DirectServoMode
     	
     	return angle;
     }
+
+	public void start()
+	{
+		Thread t_background = new Thread(this);
+		t_background.setDaemon(true); // 设置为守护线程
+		t_background.start();
+	}
     
-    /**
-     * Main Application Routine
-     */
-    public void start()
-    {       
-        boolean doDebugPrints = false;
-        KUKAServerManager.directServoMotionFlag_ = true;
+	@Override
+	public void run() {
+		try{
+			while(KUKAServerManager.servoThread_ == false){
+				ThreadUtil.milliSleep(100);
+			}
+		}catch(Exception e ){
+			logger_.error(e.toString());
+		}
+		// TODO Auto-generated method stub
+		boolean doDebugPrints = false;
         
         DirectServo aDirectServoMotion = new DirectServo(_lbr.getCurrentJointPosition());
         
-        if(KUKAServerManager.jRelVelServo_!=0)
-        	aDirectServoMotion.setJointVelocityRel(KUKAServerManager.jRelVelServo_);
-        else 
-        	aDirectServoMotion.setJointVelocityRel(0.25);
+        aDirectServoMotion.setJointVelocityRel(0.1);
         aDirectServoMotion.setMinimumTrajectoryExecutionTime(40e-3);
 
         _toolAttachedToLBR.moveAsync(aDirectServoMotion);
@@ -74,50 +82,55 @@ public class DirectServoMode
         Frame destFrame = theDirectServoRuntime.getCurrentCartesianDestination(_toolAttachedToLBR.getDefaultMotionFrame());
         
         try
-        {   	
+        {  
+        	while(KUKAServerManager.directServoMotionFlag_ == false)
+        		ThreadUtil.milliSleep(100);
+        	logger_.info("ddddddddddddddddddddddd");
 	        while(KUKAServerManager.directServoMotionFlag_ == true){
 	        	
-	            if(KUKAServerManager.jRelVelServo_!=0)
-	            	aDirectServoMotion.setJointVelocityRel(KUKAServerManager.jRelVelServo_);
-	            else 
-	            	aDirectServoMotion.setJointVelocityRel(0.25);
-	            
-	            logger_.info("Servo Velocity" + Double.toString(KUKAServerManager.jRelVelServo_));
-	            
 	        	int cnt=0;
-	        	
-	        	logger_.info("Servo dst" + Double.toString(KUKAServerManager.EEFPos_[1]));
-	            while(cartesianDistance(destFrame,KUKAServerManager.EEFPos_Servo_) > 0.2 || 
-	            		angleDistance(destFrame,KUKAServerManager.EEFPos_Servo_) > 0.2*Math.PI/180)
-	            {            	
-	                theDirectServoRuntime.updateWithRealtimeSystem();
+//	        	while(KUKAServerManager.jRelVelServo_!=0 && (KUKAServerManager.EEFPos_[0]!=0 ||
+//	        		KUKAServerManager.EEFPos_[1]!=0 || KUKAServerManager.EEFPos_[2]!=0)){
+//	        		logger_.info("aaaaaaaaaaaaaaaaaadddddddddddd");
+		            while(cartesianDistance(destFrame,KUKAServerManager.EEFPos_Servo_) > 0.2 || 
+		            		angleDistance(destFrame,KUKAServerManager.EEFPos_Servo_) > 0.2*Math.PI/180)
+		            {            	
+		                theDirectServoRuntime.updateWithRealtimeSystem();
+		                aDirectServoMotion.setJointVelocityRel(KUKAServerManager.jRelVelServo_);
+		                
+		                // Get the measured position in Cartesian...
+		                Frame msrPose = theDirectServoRuntime
+		                        .getCurrentCartesianDestination(_toolAttachedToLBR.getDefaultMotionFrame());
+		
+		                ThreadUtil.milliSleep(MILLI_SLEEP_TO_EMULATE_COMPUTATIONAL_EFFORT);
 	                
-	                // Get the measured position in Cartesian...
-	                Frame msrPose = theDirectServoRuntime
-	                        .getCurrentCartesianDestination(_toolAttachedToLBR.getDefaultMotionFrame());
+	                	if((cnt + 1) % 500 == 0){
+	                		logger_.info("the No. of the control point:" + (cnt+1)*500);
+	                		logger_.info("Servo Velocity" + Double.toString(KUKAServerManager.jRelVelServo_));
+	         	        	logger_.info("Servo dst" + Double.toString(KUKAServerManager.EEFPos_[1]));
+	         	        	
+	                	}
 	
-	                ThreadUtil.milliSleep(MILLI_SLEEP_TO_EMULATE_COMPUTATIONAL_EFFORT);
-                
-                	if((cnt + 1) % 500 == 0)logger_.info("the No. of the control point:" + (cnt+1)*500);
-
-                	// compute a new commanded position
-	                destFrame.setX(destFrame.getX() - (destFrame.getX() - KUKAServerManager.EEFPos_Servo_[0])/100);
-	                destFrame.setY(destFrame.getY() - (destFrame.getY() - KUKAServerManager.EEFPos_Servo_[1])/100);
-	                destFrame.setZ(destFrame.getZ() - (destFrame.getZ() - KUKAServerManager.EEFPos_Servo_[2])/100);                             
-	                destFrame.setAlphaRad(destFrame.getAlphaRad() - (destFrame.getAlphaRad() - KUKAServerManager.EEFPos_Servo_[3])/100);
-                	destFrame.setBetaRad(destFrame.getBetaRad() - (destFrame.getBetaRad() - KUKAServerManager.EEFPos_Servo_[4])/100);
-                	destFrame.setGammaRad(destFrame.getGammaRad() - (destFrame.getGammaRad() - KUKAServerManager.EEFPos_Servo_[5])/100);
-                
-                	if (doDebugPrints){
-                		logger_.info("New cartesian goal " + destFrame);
-                		logger_.info("LBR position " + _lbr.getCurrentCartesianPosition(_lbr.getFlange()));
-                		logger_.info("Measured cartesian pose from runtime " + msrPose);
-                	}
-              
-                	theDirectServoRuntime.setDestination(destFrame);
-                	++cnt;
-          	  }
-        	}
+	                	// compute a new commanded position
+		                destFrame.setX(destFrame.getX() - (destFrame.getX() - KUKAServerManager.EEFPos_Servo_[0])/100);
+		                destFrame.setY(destFrame.getY() - (destFrame.getY() - KUKAServerManager.EEFPos_Servo_[1])/100);
+		                destFrame.setZ(destFrame.getZ() - (destFrame.getZ() - KUKAServerManager.EEFPos_Servo_[2])/100);                             
+		                destFrame.setAlphaRad(destFrame.getAlphaRad() - (destFrame.getAlphaRad() - KUKAServerManager.EEFPos_Servo_[3])/100);
+	                	destFrame.setBetaRad(destFrame.getBetaRad() - (destFrame.getBetaRad() - KUKAServerManager.EEFPos_Servo_[4])/100);
+	                	destFrame.setGammaRad(destFrame.getGammaRad() - (destFrame.getGammaRad() - KUKAServerManager.EEFPos_Servo_[5])/100);
+	                
+	                	if (doDebugPrints){
+	                		logger_.info("New cartesian goal " + destFrame);
+	                		logger_.info("LBR position " + _lbr.getCurrentCartesianPosition(_lbr.getFlange()));
+	                		logger_.info("Measured cartesian pose from runtime " + msrPose);
+	                	}
+	              
+	                	theDirectServoRuntime.setDestination(destFrame);
+	                	++cnt;
+	          	  }
+	        	}
+//        	}
+        
         } catch (Exception e) {
             logger_.info(e.getLocalizedMessage());
             e.printStackTrace();
@@ -125,5 +138,6 @@ public class DirectServoMode
 
         logger_.info("Stop the DirectServo motion");
         theDirectServoRuntime.stopMotion();
-    }
+		
+	}
 }

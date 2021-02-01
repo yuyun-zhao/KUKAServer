@@ -34,6 +34,7 @@ public class KUKAServerManager extends RoboticsAPIApplication
 	//public static StateVariablesOfRobot queryStateVariables; // state variables publisher
 	private BackgroundTask dabak_; // server function.
 	private QueryStateTaskServer queryStateServer_;
+	private DirectServoMode directServo_;
 
 	public static int jNum_;
 
@@ -55,11 +56,9 @@ public class KUKAServerManager extends RoboticsAPIApplication
 	public static double[] EEFPos_Servo_;
 	public static double[] jVelOld_;
 	
-	// 原子Boolean，线程安全地设置_handGuiding_endFlag的布尔值
-	public static AtomicBoolean handguiding_endflag_ = new AtomicBoolean(false);
-	
 	public static boolean terminate_flag_ = false;
 	public static boolean directServoMotionFlag_ = false;
+	public static boolean servoThread_ = false;
 
 	public static boolean background_thread_ = false;
 	public static boolean send_thread_ = false;
@@ -121,6 +120,10 @@ public class KUKAServerManager extends RoboticsAPIApplication
 		int _backgroundPort = 30001;
 		dabak_ = new BackgroundTask(_backgroundPort, _timeout, LBR_Med_, this.getLogger());
 		dabak_.start();
+		
+		//开启servo线程
+		directServo_ = new DirectServoMode(LBR_Med_,tool_,this.getLogger());
+		directServo_.start();
 		
 		// 设置工具坐标系为法兰坐标系
 		double[] defaultToolInfo = { 0., 0., 0., 0., 0., 0. ,0., 0., 0., 0.};

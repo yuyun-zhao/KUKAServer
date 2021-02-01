@@ -23,7 +23,8 @@ public class HandGuidingMode
 
     public void start()
     { 
-        KUKAServerManager.handguiding_endflag_.compareAndSet(true, false);
+//        BackgroundTask.handguiding_endflag_.compareAndSet(true, false);
+    	BackgroundTask.handguiding_endflag_ = false;
         LBR_Med_.move(ptp(LBR_Med_.getCurrentJointPosition()));
         if (!ServoMotion.validateForImpedanceMode(LBR_Med_))
         {
@@ -49,7 +50,7 @@ public class HandGuidingMode
         ISmartServoRuntime servoMotionRuntime = servoMotion.getRuntime();
         servoMotionRuntime.updateWithRealtimeSystem();
        
-        while (KUKAServerManager.handguiding_endflag_.get() == false)      		
+        while (BackgroundTask.handguiding_endflag_== false)      		
         {
 //        	logger_.info(String.valueOf(KUKAServerManager.handguiding_endflag_.get()));
             JointPosition curJntPose = LBR_Med_.getCurrentJointPosition();
