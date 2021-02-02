@@ -141,7 +141,8 @@ public class testSmartServo extends RoboticsAPIApplication
 
         SmartServo aSmartServoMotion = new SmartServo(_lbr.getCurrentJointPosition());
 
-        aSmartServoMotion.setJointVelocityRel(0.2);
+        aSmartServoMotion.setJointVelocityRel(0.5);
+        aSmartServoMotion.setJointAccelerationRel(0.2);
         aSmartServoMotion.setMinimumTrajectoryExecutionTime(40e-3);
 
         getLogger().info("Starting DirectServo motion in position control mode");
@@ -156,7 +157,8 @@ public class testSmartServo extends RoboticsAPIApplication
         
         try
         {
-            while(cartesianDistance(destFrame,end) > 0.5 || angleDistance(destFrame,end) > 0.5*Math.PI/180)
+            while(cartesianDistance(destFrame,end) > 0.5 || 
+            		angleDistance(destFrame,end) > 0.5*Math.PI/180)
             {            	
                 theSmartServoRuntime.updateWithRealtimeSystem();
                 // Get the measured position in Cartesian...
@@ -165,15 +167,15 @@ public class testSmartServo extends RoboticsAPIApplication
 
                 ThreadUtil.milliSleep(MILLI_SLEEP_TO_EMULATE_COMPUTATIONAL_EFFORT);
                 
-                getLogger().info("the No. of the control point:" + (cnt+1));
+                if((cnt+1)%50==0)getLogger().info("the No. of the control point:" + (cnt+1));
                 
                 // compute a new commanded position
-                destFrame.setX(destFrame.getX() - (destFrame.getX() - end[0])/1000);
-                destFrame.setY(destFrame.getY() - (destFrame.getY() - end[1])/1000);
-                destFrame.setZ(destFrame.getZ() - (destFrame.getZ() - end[2])/1000);                             
-                destFrame.setAlphaRad(destFrame.getAlphaRad() - (destFrame.getAlphaRad() - end[3])/1000);
-                destFrame.setBetaRad(destFrame.getBetaRad() - (destFrame.getBetaRad() - end[4])/1000);
-                destFrame.setGammaRad(destFrame.getGammaRad() - (destFrame.getGammaRad() - end[5])/1000);
+                destFrame.setX(destFrame.getX() - (destFrame.getX() - end[0])/300);
+                destFrame.setY(destFrame.getY() - (destFrame.getY() - end[1])/300);
+                destFrame.setZ(destFrame.getZ() - (destFrame.getZ() - end[2])/300);                             
+                destFrame.setAlphaRad(destFrame.getAlphaRad() - (destFrame.getAlphaRad() - end[3])/300);
+                destFrame.setBetaRad(destFrame.getBetaRad() - (destFrame.getBetaRad() - end[4])/300);
+                destFrame.setGammaRad(destFrame.getGammaRad() - (destFrame.getGammaRad() - end[5])/300);
                 
                 if (doDebugPrints){
                     getLogger().info("New cartesian goal " + destFrame);

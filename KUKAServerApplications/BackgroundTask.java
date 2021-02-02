@@ -6,7 +6,6 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.concurrent.atomic.AtomicBoolean;
 import com.kuka.med.deviceModel.LBRMed;
 import com.kuka.roboticsAPI.geometricModel.LoadData;
 import com.kuka.roboticsAPI.geometricModel.ObjectFrame;
@@ -26,9 +25,6 @@ class BackgroundTask implements Runnable
 	public StringBuffer command_ = new StringBuffer();
 
 	private final ITaskLogger logger_;
-	
-	// 原子Boolean，线程安全地设置_handGuiding_endFlag的布尔值
-	public static volatile boolean handguiding_endflag_ = false;
 
 	// ‘\n’的ASCII码为10
 	private static final String stopCharacter = Character.toString((char)(10));
@@ -116,7 +112,6 @@ class BackgroundTask implements Runnable
 						try{						
 						logger_.info("start direct servo mode");
 						KUKAServerManager.servoThread_ = true;
-						
 						this.sendCommand(ack);
 						command_.setLength(0);
 						}catch(Exception e){
@@ -137,8 +132,7 @@ class BackgroundTask implements Runnable
 					{
 						// 运行HandGuiding程序
 						try{
-							HandGuidingMode hg = new HandGuidingMode(LBR_Med_,logger_);
-							hg.start();
+							KUKAServerManager.handguiding_flag_ = true;
 							this.sendCommand(ack);
 						} catch(Exception e){
 							this.sendCommand(error);
@@ -149,8 +143,7 @@ class BackgroundTask implements Runnable
 					// 停止HandGuiding
 					else if (CommandParseMachine.isEqual(command_, "endHandGuiding"))
 					{
-						handguiding_endflag_= true;
-						logger_.info(String.valueOf(handguiding_endflag_));
+						KUKAServerManager.handguiding_flag_ = false;
 						this.sendCommand(ack);
 						command_.setLength(0);
 					}
@@ -403,10 +396,12 @@ class BackgroundTask implements Runnable
 
 		// 响应UPDATE命令：更新EEF坐标值（servo模式）
 		else if (CommandParseMachine.isPrefix(command_, "UPDATE_ServoPos_"))
-		{	logger_.info("fuck");
+		{	
 			if (CommandParseMachine.updateEEFPosServo(command_.toString())){
 				KUKAServerManager.directServoMotionFlag_ = true;
-				logger_.info(Double.toString(KUKAServerManager.EEFPos_Servo_[0]));
+				logger_.info("EEFPos_Servo_[0]" + Double.toString(KUKAServerManager.EEFPos_Servo_[0]));
+				logger_.info("EEFPos_Servo_[1]" + Double.toString(KUKAServerManager.EEFPos_Servo_[1]));
+				logger_.info("EEFPos_Servo_[2]" + Double.toString(KUKAServerManager.EEFPos_Servo_[2]));
 			}else{
 				KUKAServerManager.directServoMotionFlag_ = false;
 			}
@@ -416,9 +411,9 @@ class BackgroundTask implements Runnable
 		
 		//响应UPDATE命令：更新关节相对速度（servo模式）
 		else if (CommandParseMachine.isPrefix(command_, "UPDATE_jRelVelServo_")){
-			logger_.info("ddddd");
+			
 			if(CommandParseMachine.updatejRelVelServo(command_.toString())){
-				logger_.info(Double.toString(KUKAServerManager.jRelVelServo_));
+				logger_.info("jRelVelServo_:" + Double.toString(KUKAServerManager.jRelVelServo_));
 			}else{
 				KUKAServerManager.directServoMotionFlag_ = false;
 			}

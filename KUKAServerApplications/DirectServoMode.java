@@ -81,23 +81,24 @@ public class DirectServoMode implements Runnable
 
         Frame destFrame = theDirectServoRuntime.getCurrentCartesianDestination(_toolAttachedToLBR.getDefaultMotionFrame());
         
+        
         try
         {  
         	while(KUKAServerManager.directServoMotionFlag_ == false)
         		ThreadUtil.milliSleep(100);
-        	logger_.info("ddddddddddddddddddddddd");
+        	
 	        while(KUKAServerManager.directServoMotionFlag_ == true){
 	        	
 	        	int cnt=0;
-//	        	while(KUKAServerManager.jRelVelServo_!=0 && (KUKAServerManager.EEFPos_[0]!=0 ||
-//	        		KUKAServerManager.EEFPos_[1]!=0 || KUKAServerManager.EEFPos_[2]!=0)){
-//	        		logger_.info("aaaaaaaaaaaaaaaaaadddddddddddd");
-		            while(cartesianDistance(destFrame,KUKAServerManager.EEFPos_Servo_) > 0.2 || 
-		            		angleDistance(destFrame,KUKAServerManager.EEFPos_Servo_) > 0.2*Math.PI/180)
+	        	while(KUKAServerManager.jRelVelServo_!=0 && (KUKAServerManager.EEFPos_Servo_[0]>200 ||
+	        		KUKAServerManager.EEFPos_Servo_[1]>200 || KUKAServerManager.EEFPos_Servo_[2]>200)){
+	        		  
+		            while(cartesianDistance(destFrame,KUKAServerManager.EEFPos_Servo_) > 0.5 || 
+		            		angleDistance(destFrame,KUKAServerManager.EEFPos_Servo_) > 0.5*Math.PI/180)
 		            {            	
 		                theDirectServoRuntime.updateWithRealtimeSystem();
 		                aDirectServoMotion.setJointVelocityRel(KUKAServerManager.jRelVelServo_);
-		                
+		               
 		                // Get the measured position in Cartesian...
 		                Frame msrPose = theDirectServoRuntime
 		                        .getCurrentCartesianDestination(_toolAttachedToLBR.getDefaultMotionFrame());
@@ -107,10 +108,9 @@ public class DirectServoMode implements Runnable
 	                	if((cnt + 1) % 500 == 0){
 	                		logger_.info("the No. of the control point:" + (cnt+1)*500);
 	                		logger_.info("Servo Velocity" + Double.toString(KUKAServerManager.jRelVelServo_));
-	         	        	logger_.info("Servo dst" + Double.toString(KUKAServerManager.EEFPos_[1]));
-	         	        	
 	                	}
-	
+	                	
+	                	//TODO:180度的时候仍需考虑，KUKA中180和-180几乎没有区别，有时可能会卡住
 	                	// compute a new commanded position
 		                destFrame.setX(destFrame.getX() - (destFrame.getX() - KUKAServerManager.EEFPos_Servo_[0])/100);
 		                destFrame.setY(destFrame.getY() - (destFrame.getY() - KUKAServerManager.EEFPos_Servo_[1])/100);
@@ -122,14 +122,14 @@ public class DirectServoMode implements Runnable
 	                	if (doDebugPrints){
 	                		logger_.info("New cartesian goal " + destFrame);
 	                		logger_.info("LBR position " + _lbr.getCurrentCartesianPosition(_lbr.getFlange()));
-	                		logger_.info("Measured cartesian pose from runtime " + msrPose);
+	                		logger_.info("Measured cartesian pose from runtime： " + msrPose);
 	                	}
-	              
+	                	   
 	                	theDirectServoRuntime.setDestination(destFrame);
 	                	++cnt;
 	          	  }
 	        	}
-//        	}
+        	}
         
         } catch (Exception e) {
             logger_.info(e.getLocalizedMessage());

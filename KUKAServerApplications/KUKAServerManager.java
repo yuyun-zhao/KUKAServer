@@ -1,7 +1,5 @@
 package KUKAServerApplications;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import com.kuka.med.deviceModel.LBRMed;
 import com.kuka.roboticsAPI.applicationModel.RoboticsAPIApplication;
 import com.kuka.roboticsAPI.controllerModel.Controller;
@@ -35,6 +33,7 @@ public class KUKAServerManager extends RoboticsAPIApplication
 	private BackgroundTask dabak_; // server function.
 	private QueryStateTaskServer queryStateServer_;
 	private DirectServoMode directServo_;
+	private HandGuidingMode handGuiding_;
 
 	public static int jNum_;
 
@@ -56,9 +55,11 @@ public class KUKAServerManager extends RoboticsAPIApplication
 	public static double[] EEFPos_Servo_;
 	public static double[] jVelOld_;
 	
+	//TODO:线程安全设置
 	public static boolean terminate_flag_ = false;
 	public static boolean directServoMotionFlag_ = false;
 	public static boolean servoThread_ = false;
+	public static boolean handguiding_flag_ = false;
 
 	public static boolean background_thread_ = false;
 	public static boolean send_thread_ = false;
@@ -124,6 +125,10 @@ public class KUKAServerManager extends RoboticsAPIApplication
 		//开启servo线程
 		directServo_ = new DirectServoMode(LBR_Med_,tool_,this.getLogger());
 		directServo_.start();
+		
+		//开启HandGuiding线程
+		handGuiding_ = new HandGuidingMode(LBR_Med_);
+		handGuiding_.start();
 		
 		// 设置工具坐标系为法兰坐标系
 		double[] defaultToolInfo = { 0., 0., 0., 0., 0., 0. ,0., 0., 0., 0.};

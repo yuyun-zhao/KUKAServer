@@ -18,7 +18,7 @@ int main()
 
 
 
-	//*****************************************HandGuiding*****************************************
+	////*****************************************HandGuiding*****************************************
 	//int k;
 	//std::cout << "step1: To start HandGuilding, please input 1 : ";
 	//std::cin >> k;
@@ -40,7 +40,7 @@ int main()
 	//	std::cin >> k;
 	//}
 	//MEDBOT.endHandGuiding();
-	//Sleep(10000);
+	//Sleep(5000);
 	
 
 
@@ -88,27 +88,27 @@ int main()
 
 
 
-	////*****************************************PTPinCS*****************************************
-	/*int h;
-	std::cout << "step5: To start PTPinCS, please input 5:";
-	std::cin >> h;
-	while (h != 5) {
-		std::cout << "input 5 to start PTPinCS.";
-		std::cin >> h;
-	}
+////	*****************************************PTPinCS*****************************************
+//	int h;
+//	std::cout << "step5: To start PTPinCS, please input 5:";
+//	std::cin >> h;
+//	while (h != 5) {
+//		std::cout << "input 5 to start PTPinCS.";
+//		std::cin >> h;
+//	}
+//	
+//	double cartPos[6] = { 0.0 };
+//	std::cout << "please input the end cartPos:";
+//	for (int i = 0; i < 6; ++i)
+//		std::cin >> cartPos[i];
+//
+//	double jRelVel = 0.0;
+//	std::cout << "please input joint relative velocity:";
+//	std::cin >> jRelVel;
+//	
+//	MEDBOT.movePTPinCS(cartPos, jRelVel);
 	
-	double cartPos[6] = { 0.0 };
-	std::cout << "please input the end cartPos:";
-	for (int i = 0; i < 6; ++i)
-		std::cin >> cartPos[i];
 
-	double jRelVel = 0.0;
-	std::cout << "please input joint relative velocity:";
-	std::cin >> jRelVel;
-	
-	MEDBOT.movePTPinCS(cartPos, jRelVel);
-	
-*/
 
 	////*****************************************PTPinJStoOrigin*****************************************
 	//int n;
@@ -154,23 +154,24 @@ int main()
 
 
 
-	//*****************************************Servo*****************************************
-	MEDBOT.startServoMode();
+	////*****************************************Servo*****************************************
+	//MEDBOT.startServoMode();
 
-	double endPos1[6] = { 610, 200, 400, 3.1415, 0.5, 3.1415 }; 
-	MEDBOT.moveLINServo(endPos1, 0.1);
+	//double endPos1[6] = { 600, 200, 400, 3, 0, 3}; 
+	//MEDBOT.moveLINServo(endPos1, 0.1);
 
-	Sleep(10000);
+	//Sleep(3000);
 
-	/*double endPos2[6] = { 500, 200, 400, 3.14 , 0, 3.14 };
-	MEDBOT.moveLINServo(endPos2, 0.2);*/
+	//double endPos2[6] = { 400, 200, 400, 3, 0, 3 };
+	//MEDBOT.moveLINServo(endPos2, 0.2);
 
-	MEDBOT.endServoMode();
+	//Sleep(10000);
+	//MEDBOT.endServoMode();
 
 
 
-	///turn off the server	
-	MEDBOT.net_serverTurnOff();
+	/////turn off the server	
+	//MEDBOT.net_serverTurnOff();
 
 	system("pause");
 

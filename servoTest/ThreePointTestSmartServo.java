@@ -82,11 +82,12 @@ public class ThreePointTestSmartServo extends RoboticsAPIApplication
 	        ISmartServoRuntime theServoRuntime = aSmartServoMotion.getRuntime();
 
 	        Frame aFrame = theServoRuntime.getCurrentCartesianDestination(_toolAttachedToLBR.getDefaultMotionFrame());
-
+	        
+	        Frame cFrame = new Frame(aFrame);
+	        
+	        for(int i = 0;i<50;++i){
 	        try
 	        {
-	                Frame cFrame = new Frame(aFrame);
-
 	        		cFrame.setZ(200);
 	        		getLogger().info("move to the auxiliary point");
 	                theServoRuntime.setDestination(cFrame);
@@ -99,11 +100,21 @@ public class ThreePointTestSmartServo extends RoboticsAPIApplication
 	        		theServoRuntime.setDestination(cFrame);
 	                getLogger().info("reach the end point.");
 	        		
-	                ThreadUtil.milliSleep(10000);
-	               
+	                ThreadUtil.milliSleep(3000);
+	                
+	                cFrame.setZ(-200);
+	        		theServoRuntime.setDestination(cFrame);
+	        		
+	        		ThreadUtil.milliSleep(1500); 
+
+	        		cFrame.setY(-200);
+	        		theServoRuntime.setDestination(cFrame);
+	                
+	        		ThreadUtil.milliSleep(3000);
 	        } catch (Exception e) {
 	            getLogger().error(e.getLocalizedMessage());
 	            e.printStackTrace();
+	        }
 	        }
 	    }
 	    
